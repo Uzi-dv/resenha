@@ -1,0 +1,55 @@
+# Checagem a cada push e pull request: o app compila e passa no lint, e o servidor passa nos
+# testes ponta a ponta (com um Cloudflare e uma Resend falsos, sem chaves de verdade).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Lint
+        run: npx oxlint src electron # avisos aparecem no log; só erros reprovam
+      - name: Build
+        run: npx vite build
+      - name: Testes
+        run: npm test
+      - name: Sintaxe do processo principal do Electron
+        run: node --check electron/main.cjs && node --check electron/preload.cjs
+
+  servidor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: server/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Testes ponta a ponta
+        run: python tests/run_e2e.py

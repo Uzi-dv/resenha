@@ -1,0 +1,42 @@
+# Python & Virtual Environment
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite
+*.sqlite3
+*.db
+resenha.db
+backend/resenha.db
+uploads/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.env
+.env.local
+.env.*.local
+
+# IDEs & System
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.exe
+
+# Segredos locais
+.jwt_secret
+
+# Pacotes de migração (contêm segredos)
+migracao/
+
+# Versão web baixada das releases (o servidor atualiza sozinho)
+web/
+web.new/
+web.old/

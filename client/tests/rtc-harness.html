@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Resenha · Teste de mídia</title>
+  <style>
+    body { background: #1e1f22; color: #dbdee1; font: 14px/1.5 system-ui, sans-serif; padding: 24px; }
+    h1 { font-size: 18px; color: #fff; }
+    #log div { font-family: ui-monospace, monospace; font-size: 12px; }
+    .ok { color: #23a55a; } .fail { color: #f23f43; } .info { color: #949ba4; }
+    video { width: 320px; background: #000; border-radius: 8px; margin-right: 8px; }
+    #summary { font-size: 16px; font-weight: 700; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>Teste ponta-a-ponta de mídia (Cloudflare Realtime)</h1>
+  <p class="info">
+    Dois usuários simulados nesta página entram na mesma call pelo servidor real e trocam áudio e vídeo pelo SFU.
+    Requer o servidor rodando com CF_REALTIME_APP_ID/TOKEN configurados. Use <code>?server=http://localhost:8000</code> para outro endereço.
+  </p>
+  <div id="summary">Executando...</div>
+  <div><video id="v1" autoplay muted playsinline></video><video id="v2" autoplay muted playsinline></video></div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { BrowserCallEngine } from '/src/services/voice/engine/BrowserCallEngine.js';
+    import { createRtcApi } from '/src/services/api.js';
+
+    const SERVER = new URLSearchParams(location.search).get('server') || 'http://localhost:8000';
+    localStorage.setItem('resenha_server_url', SERVER);
+    const results = [];
+    const log = (msg, cls = 'info') => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = msg;
+      document.getElementById('log').appendChild(el);
+    };
+    const check = (cond, label) => {
+      results.push({ cond, label });
+      log(`${cond ? '✔' : '✘'} ${label}`, cond ? 'ok' : 'fail');
+    };
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const waitFor = async (fn, timeout = 15000) => {
+      const end = Date.now() + timeout;
+      while (Date.now() < end) {
+        const v = await fn();
+        if (v) return v;
+        await sleep(200);
+      }
+      return null;
+    };
+
+    async function rest(path, { token, method = 'GET', body } = {}) {
+      const res = await fetch(`${SERVER}/api${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(`${path}: ${data?.detail || res.status}`);
+      return data;
+    }
+
+    function syntheticAudio(freq) {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      osc.frequency.value = freq;
+      const dest = ctx.createMediaStreamDestination();
+      osc.connect(dest);
+      osc.start();
+      return dest.stream.getAudioTracks()[0];
+    }
+
+    function syntheticVideo(label) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const g = canvas.getContext('2d');
+      let frame = 0;
+      setInterval(() => {
+        g.fillStyle = `hsl(${(frame * 3) % 360} 70% 40%)`;
+        g.fillRect(0, 0, 1280, 720);
+        g.fillStyle = '#fff';
+        g.font = 'bold 80px sans-serif';
+        g.fillText(`${label} #${frame++}`, 80, 380);
+      }, 1000 / 30);
+      return canvas.captureStream(30).getVideoTracks()[0];
+    }
+
+    async function makeUser(name) {
+      const suffix = Math.random().toString(36).slice(2, 7);
+      const reg = await rest('/auth/register', {
+        method: 'POST',
+        body: { username: `${name}${suffix}`, email: `${name}${suffix}@teste.dev`, password: 'teste123' }
+      });
+      const user = { name, token: reg.access_token, id: reg.user.id, states: {}, tracks: {} };
+      user.engine = new BrowserCallEngine({ rtcApi: createRtcApi(user.token) });
+      user.engine.on('track', (t) => {
+        user.tracks[`${t.userId}:${t.kind}`] = t.track;
+        log(`${name} recebeu track ${t.kind} de ${t.userId}`);
+      });
+      user.engine.on('track-ended', (t) => delete user.tracks[t.key]);
+      user.engine.on('state', (s) => log(`${name}: mídia ${s}`));
+      user.engine.on('error', (e) => log(`${name}: erro ${e.message}`, 'fail'));
+      return user;
+    }
+
+    function connectGateway(user, channelId) {
+      return new Promise((resolve) => {
+        const ws = new WebSocket(`${SERVER.replace(/^http/, 'ws')}/ws?token=${user.token}`);
+        user.ws = ws;
+        const desired = () => {
+          const list = [];
+          for (const st of Object.values(user.states)) {
+            if (st.user_id === user.id || st.channel_id !== channelId) continue;
+            for (const [kind, name] of Object.entries(st.tracks || {})) list.push({ userId: st.user_id, kind, trackName: name });
+          }
+          user.engine.setDesired(list);
+        };
+        ws.onmessage = (ev) => {
+          const { t, d } = JSON.parse(ev.data);
+          if (t === 'READY') {
+            for (const st of d.voice_states) user.states[st.user_id] = st;
+            ws.send(JSON.stringify({ op: 'voice_join', channel_id: channelId }));
+          } else if (t === 'VOICE_JOINED') {
+            user.states[d.user_id] = d;
+            if (!user.engine.starting && (!user.engine.active || user.engine.sessionId !== d.session_id)) user.engine.start();
+            resolve();
+          } else if (t === 'VOICE_STATE_UPDATE') {
+            if (d.channel_id == null) delete user.states[d.user_id];
+            else user.states[d.user_id] = d;
+            desired();
+          }
+        };
+        setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 'heartbeat', t: Date.now() })), 15000);
+      });
+    }
+
+    async function bytesReceived(engine, kind) {
+      if (!engine.pc) return 0;
+      const stats = await engine.pc.getStats();
+      let total = 0;
+      stats.forEach((s) => {
+        if (s.type === 'inbound-rtp' && s.kind === kind) total += s.bytesReceived || 0;
+      });
+      return total;
+    }
+
+    try {
+      log(`Servidor: ${SERVER}`);
+      const a = await makeUser('ana');
+      const b = await makeUser('bruno');
+      const config = await rest('/rtc/config', { token: a.token });
+      check(config.enabled, 'Servidor com Cloudflare Realtime configurado');
+      if (!config.enabled) throw new Error('Configure CF_REALTIME_APP_ID/TOKEN no .env do servidor');
+
+      const srv = await rest('/servers', { token: a.token, method: 'POST', body: { name: 'Teste de mídia' } });
+      await rest('/servers/join', { token: b.token, method: 'POST', body: { invite_code: srv.invite_code } });
+      const voice = srv.channels.find((c) => c.type === 'voice');
+
+      a.engine.publish([{ kind: 'mic', track: syntheticAudio(440) }]);
+      b.engine.publish([{ kind: 'mic', track: syntheticAudio(660) }]);
+      await connectGateway(a, voice.id);
+      await connectGateway(b, voice.id);
+
+      check(await waitFor(() => a.engine.state === 'connected'), 'Ana conectou ao SFU');
+      check(await waitFor(() => b.engine.state === 'connected'), 'Bruno conectou ao SFU');
+      check(await waitFor(() => a.tracks[`${b.id}:mic`]), 'Ana recebe a track de voz do Bruno');
+      check(await waitFor(() => b.tracks[`${a.id}:mic`]), 'Bruno recebe a track de voz da Ana');
+      check(await waitFor(async () => (await bytesReceived(a.engine, 'audio')) > 5000), 'Áudio chegando de fato (bytes recebidos)');
+
+      log('Bruno começa a transmitir a tela...');
+      b.engine.publish([
+        { kind: 'screen', track: syntheticVideo('Bruno'), options: { encodings: [{ maxBitrate: 2_500_000, maxFramerate: 30 }], codec: 'video/H264' } },
+        { kind: 'screen_audio', track: syntheticAudio(220), options: { stereo: true } }
+      ]);
+      const screenTrack = await waitFor(() => a.tracks[`${b.id}:screen`]);
+      check(screenTrack, 'Ana recebe a tela do Bruno');
+      if (screenTrack) document.getElementById('v1').srcObject = new MediaStream([screenTrack]);
+      check(await waitFor(async () => (await bytesReceived(a.engine, 'video')) > 50000), 'Vídeo chegando de fato');
+      const codec = await (async () => {
+        const stats = await a.engine.pc.getStats();
+        let mime = null;
+        stats.forEach((s) => { if (s.type === 'codec' && s.mimeType?.startsWith('video/')) mime = mime || s.mimeType; });
+        return mime;
+      })();
+      log(`Codec de vídeo negociado: ${codec}`);
+      check(await waitFor(() => a.tracks[`${b.id}:screen_audio`]), 'Ana recebe o áudio da transmissão');
+
+      log('Bruno para a transmissão...');
+      await b.engine.unpublish(['screen', 'screen_audio']);
+      check(await waitFor(() => !a.tracks[`${b.id}:screen`]), 'Ana deixa de receber a tela');
+      check(a.tracks[`${b.id}:mic`], 'Voz continua após parar a tela');
+
+      log('Simulando queda de rede da Ana (recria a conexão)...');
+      a.engine.pc.close();
+      a.engine._scheduleRestart(0);
+      check(await waitFor(() => a.engine.state === 'connected', 20000), 'Ana reconecta sozinha');
+      check(await waitFor(() => b.tracks[`${a.id}:mic`] && b.engine.subscriptions.get(`${a.id}:mic`)?.trackName === b.states[a.id]?.tracks?.mic, 20000),
+        'Bruno reassina a nova track da Ana automaticamente');
+      const before = await bytesReceived(b.engine, 'audio');
+      await sleep(2000);
+      check((await bytesReceived(b.engine, 'audio')) > before, 'Áudio da Ana volta a fluir para o Bruno');
+
+      a.ws.send(JSON.stringify({ op: 'voice_leave' }));
+      check(await waitFor(() => !b.tracks[`${a.id}:mic`]), 'Bruno para de receber a Ana quando ela sai');
+      a.engine.stop();
+      b.engine.stop();
+    } catch (err) {
+      check(false, `Erro: ${err.message}`);
+    }
+
+    const failed = results.filter((r) => !r.cond);
+    const summary = document.getElementById('summary');
+    summary.textContent = failed.length ? `FALHOU (${failed.length}/${results.length})` : `TUDO OK (${results.length} verificações)`;
+    summary.className = failed.length ? 'fail' : 'ok';
+    window.__rtcResults = { passed: results.length - failed.length, failed: failed.map((f) => f.label) };
+  </script>
+</body>
+</html>

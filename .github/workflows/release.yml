@@ -1,0 +1,87 @@
+# Release automática do app: a cada push na main que mexa em client/, gera os instaladores no
+# Windows e publica no seu repositório público de releases (de onde o app se atualiza sozinho).
+#
+# Resenha: por padrão as versões saem no PRÓPRIO repositório (público), com o token automático do GitHub.
+# Nada a configurar além da variável SERVER_URL (Settings → Secrets and variables → Actions → Variables),
+# com o endereço do servidor, ex.: https://resenha-galera.duckdns.org
+# Opcional: RELEASES_REPO + segredo RELEASES_TOKEN para publicar num repositório separado.
+#
+# Versão: a do package.json se for maior que a última publicada; senão, +1 no patch.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: client
+    env:
+      GH_REPO: ${{ vars.RELEASES_REPO || github.repository }}
+      VITE_SERVER_URL: ${{ vars.SERVER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # histórico completo para gerar as notas a partir dos commits
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci
+
+      # Barra a release se o que vai dentro do app tiver vulnerabilidade alta ou crítica
+      - name: Vulnerabilidades nas dependências do app
+        run: npm audit --omit=dev --audit-level=high
+
+      # O app lê o repositório de releases do package.json (atualização automática)
+      - name: Apontar o app para o seu repositório de releases
+        shell: bash
+        run: |
+          owner="${GH_REPO%%/*}"; repo="${GH_REPO#*/}"
+          npm pkg set "build.publish[0].owner=$owner" "build.publish[0].repo=$repo"
+
+      - name: Definir versão e notas
+        id: prep
+        run: node scripts/prepare-release.cjs
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN || secrets.GITHUB_TOKEN }}
+
+      # Electron e ferramentas do electron-builder (NSIS etc.): baixados uma vez, não a cada release
+      - name: Cache do Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Build
+        run: npx vite build && npx electron-builder --win --publish never
+
+      # Versão web: o mesmo build do app, servido pelo seu servidor (que baixa este pacote sozinho)
+      - name: Pacote da versão web
+        shell: pwsh
+        run: Compress-Archive -Path dist/* -DestinationPath "dist-electron/resenha-web-${{ steps.prep.outputs.version }}.zip" -Force
+
+      - name: Publicar v${{ steps.prep.outputs.version }}
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN || secrets.GITHUB_TOKEN }}

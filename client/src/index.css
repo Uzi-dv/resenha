@@ -1,0 +1,824 @@
+@import "tailwindcss";
+
+/*
+ * Cores do app como tokens: os componentes usam `bg-side`, `text-fg-muted`, `border-line`...
+ * e cada tema (html[data-theme]) só redefine as variáveis --c-*. Ver src/services/theme.js.
+ */
+@theme inline {
+  --color-frame: var(--c-frame);             /* barra de título e trilho de servidores */
+  --color-side: var(--c-side);               /* barra lateral de canais / DMs */
+  --color-chat: var(--c-chat);               /* área principal */
+  --color-panel: var(--c-panel);             /* painel do usuário, controles flutuantes */
+  --color-well: var(--c-well);               /* campos de texto, poços escuros */
+  --color-float: var(--c-float);             /* menus e popovers */
+  --color-line: var(--c-line);               /* bordas sutis entre áreas */
+  --color-line-strong: var(--c-line-strong); /* separadores */
+  --color-hover: var(--c-hover);             /* fundo ao passar o mouse */
+  --color-active: var(--c-active);           /* item selecionado */
+  --color-rail-item: var(--c-rail-item);     /* ícones de servidor no trilho */
+
+  --color-fg-strong: var(--c-fg-strong);
+  --color-fg: var(--c-fg);
+  --color-fg-2: var(--c-fg-2);
+  --color-fg-muted: var(--c-fg-muted);
+  --color-fg-faint: var(--c-fg-faint);
+
+  --color-accent: var(--c-accent);
+  --color-accent-hover: color-mix(in oklab, var(--c-accent) 82%, black);
+  --color-accent-active: color-mix(in oklab, var(--c-accent) 68%, black);
+  --color-accent-soft: var(--c-accent-soft); /* texto de destaque sobre fundo tingido (menções) */
+  --color-on-accent: var(--c-on-accent);     /* texto sobre a cor de destaque (preto ou branco, pelo contraste) */
+  --color-ink: var(--c-ink);                 /* contorno e sombra dura dos "adesivos" (botões e janelas) */
+
+  --color-ok: #23a55a;
+  --color-ok-hover: #1a7f43;
+  --color-danger: #f23f43;
+  --color-danger-hover: #da373c;
+  --color-warn: var(--c-warn);
+  --color-link: var(--c-link);
+}
+
+/* Escuro (padrão): o escuro clássico do Discord */
+:root {
+  --c-frame: #1e1f22;
+  --c-side: #2b2d31;
+  --c-chat: #313338;
+  --c-panel: #232428;
+  --c-well: #1e1f22;
+  --c-float: #111214;
+  --c-line: #1f2023;
+  --c-line-strong: #3f4147;
+  --c-hover: #35373c;
+  --c-active: #404249;
+  --c-rail-item: #313338;
+  --c-fg-strong: #f2f3f5;
+  --c-fg: #dbdee1;
+  --c-fg-2: #b5bac1;
+  --c-fg-muted: #949ba4;
+  --c-fg-faint: #80848e;
+  --c-accent: #5865f2;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 55%, white);
+  --c-warn: #f0b232;
+  --c-scroll: #1a1b1e;
+  --c-on-accent: #ffffff;
+  --c-ink: #000000;
+  --c-link: #00a8fc;
+  color-scheme: dark;
+}
+
+/*
+ * Resenha (padrão de quem instala agora): o azul da madrugada e o âmbar da página de download e do convite.
+ * .theme-resenha aplica as mesmas cores num trecho só (a tela de login usa sempre a cara do Resenha).
+ */
+:root[data-theme='resenha'],
+.theme-resenha {
+  --c-frame: #0b0e19;
+  --c-side: #121729;
+  --c-chat: #171d33;
+  --c-panel: #0f1424;
+  --c-well: #0b0e19;
+  --c-float: #080b14;
+  --c-line: #232b47;
+  --c-line-strong: #2f3a5e;
+  --c-hover: #1f2741;
+  --c-active: #28325a;
+  --c-rail-item: #1b2238;
+  --c-fg-strong: #f4f6fb;
+  --c-fg: #e3e7f0;
+  --c-fg-2: #c4cbdb;
+  --c-fg-muted: #8f99ae;
+  --c-fg-faint: #6f7a93;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 60%, white);
+  --c-scroll: #2f3a5e;
+  --c-ink: #000000;
+  --c-link: #4be3a9;
+  color-scheme: dark;
+}
+
+.theme-resenha {
+  --c-accent: #ffb547;
+  --c-on-accent: #2b1c04;
+  color: var(--c-fg);
+}
+
+/* Grafite: mais escuro e neutro, sem o tom azulado */
+:root[data-theme='ash'] {
+  --c-frame: #121214;
+  --c-side: #1a1a1e;
+  --c-chat: #1f1f23;
+  --c-panel: #18181b;
+  --c-well: #121214;
+  --c-float: #0c0c0e;
+  --c-line: #2a2a30;
+  --c-line-strong: #34343b;
+  --c-hover: #29292e;
+  --c-active: #323238;
+  --c-rail-item: #26262b;
+  --c-scroll: #2e2e34;
+}
+
+/*
+ * OLED: preto absoluto nas áreas grandes (pixels apagados em telas OLED),
+ * separação só por bordas finas e cinzas muito escuros nos elementos interativos.
+ */
+:root[data-theme='oled'] {
+  --c-frame: #000000;
+  --c-side: #000000;
+  --c-chat: #000000;
+  --c-panel: #0e0e10;
+  --c-well: #141416;
+  --c-float: #0e0e10;
+  --c-line: #1e1e22;
+  --c-line-strong: #2a2a2f;
+  --c-hover: #18181b;
+  --c-active: #222226;
+  --c-rail-item: #161618;
+  --c-fg-muted: #9a9ea6;
+  --c-scroll: #26262b;
+}
+
+/* Temas coloridos (todos escuros: o app usa texto claro sobre fundo escuro) */
+:root[data-theme='sakura'] {
+  --c-frame: #1f1419;
+  --c-side: #2a1b22;
+  --c-chat: #301f28;
+  --c-panel: #24171d;
+  --c-well: #1a1015;
+  --c-float: #140c10;
+  --c-line: #3a2630;
+  --c-line-strong: #4d3340;
+  --c-hover: #3b2631;
+  --c-active: #4a3040;
+  --c-rail-item: #3a2530;
+  --c-fg-strong: #fff3f8;
+  --c-fg: #f0e2e9;
+  --c-fg-2: #dcc3cf;
+  --c-fg-muted: #c2a3b3;
+  --c-fg-faint: #a3848f;
+  --c-scroll: #4d3340;
+}
+
+:root[data-theme='menta'] {
+  --c-frame: #0f1c1c;
+  --c-side: #142626;
+  --c-chat: #182e2d;
+  --c-panel: #122222;
+  --c-well: #0b1717;
+  --c-float: #071010;
+  --c-line: #213d3b;
+  --c-line-strong: #2c514e;
+  --c-hover: #213d3b;
+  --c-active: #2a4c49;
+  --c-rail-item: #213d3b;
+  --c-fg-strong: #f2fbf9;
+  --c-fg: #def0ec;
+  --c-fg-2: #bddad5;
+  --c-fg-muted: #9cc2bd;
+  --c-fg-faint: #7fa39e;
+  --c-scroll: #2c514e;
+}
+
+:root[data-theme='floresta'] {
+  --c-frame: #0f1a14;
+  --c-side: #15241b;
+  --c-chat: #1a2b21;
+  --c-panel: #122019;
+  --c-well: #0c1610;
+  --c-float: #08100b;
+  --c-line: #213a2b;
+  --c-line-strong: #2d4d39;
+  --c-hover: #22382a;
+  --c-active: #2b4735;
+  --c-rail-item: #22382a;
+  --c-fg-strong: #f1faf4;
+  --c-fg: #dcebe1;
+  --c-fg-2: #bcd3c4;
+  --c-fg-muted: #9cb8a6;
+  --c-fg-faint: #7f9a88;
+  --c-scroll: #2d4d39;
+}
+
+:root[data-theme='oceano'] {
+  --c-frame: #0b1522;
+  --c-side: #111f33;
+  --c-chat: #15263d;
+  --c-panel: #0f1b2d;
+  --c-well: #0a1320;
+  --c-float: #070e18;
+  --c-line: #1d3150;
+  --c-line-strong: #284066;
+  --c-hover: #1c3150;
+  --c-active: #243d63;
+  --c-rail-item: #1c3150;
+  --c-fg-strong: #f2f7fd;
+  --c-fg: #dbe5f2;
+  --c-fg-2: #b8c8dd;
+  --c-fg-muted: #95aac6;
+  --c-fg-faint: #788ca8;
+  --c-scroll: #284066;
+}
+
+:root[data-theme='uva'] {
+  --c-frame: #150f1f;
+  --c-side: #1e162c;
+  --c-chat: #241a35;
+  --c-panel: #1a1327;
+  --c-well: #110c19;
+  --c-float: #0c0812;
+  --c-line: #33264a;
+  --c-line-strong: #45335f;
+  --c-hover: #33264a;
+  --c-active: #3f2f5c;
+  --c-rail-item: #33264a;
+  --c-fg-strong: #f7f3fd;
+  --c-fg: #e7e0f3;
+  --c-fg-2: #cbbfe0;
+  --c-fg-muted: #ad9ec8;
+  --c-fg-faint: #8f80aa;
+  --c-scroll: #45335f;
+}
+
+:root[data-theme='cafe'] {
+  --c-frame: #1a1410;
+  --c-side: #241c16;
+  --c-chat: #2b221b;
+  --c-panel: #1f1813;
+  --c-well: #15100c;
+  --c-float: #0f0b08;
+  --c-line: #3a2e24;
+  --c-line-strong: #4d3d30;
+  --c-hover: #3a2e24;
+  --c-active: #47392d;
+  --c-rail-item: #3a2e24;
+  --c-fg-strong: #faf4ee;
+  --c-fg: #ede3d9;
+  --c-fg-2: #d4c6b8;
+  --c-fg-muted: #b8a796;
+  --c-fg-faint: #998979;
+  --c-scroll: #4d3d30;
+}
+
+:root[data-theme='por-do-sol'] {
+  --c-frame: #1f1210;
+  --c-side: #2a1915;
+  --c-chat: #321e19;
+  --c-panel: #241512;
+  --c-well: #1a0f0c;
+  --c-float: #120a08;
+  --c-line: #44281f;
+  --c-line-strong: #5a3529;
+  --c-hover: #43281f;
+  --c-active: #553226;
+  --c-rail-item: #43281f;
+  --c-fg-strong: #fff4ef;
+  --c-fg: #f3e2da;
+  --c-fg-2: #e0c4b8;
+  --c-fg-muted: #c9a597;
+  --c-fg-faint: #a8877a;
+  --c-scroll: #5a3529;
+}
+
+:root[data-theme='rubi'] {
+  --c-frame: #1c0e10;
+  --c-side: #261316;
+  --c-chat: #2d171a;
+  --c-panel: #211114;
+  --c-well: #170b0d;
+  --c-float: #100708;
+  --c-line: #3d1f24;
+  --c-line-strong: #522a30;
+  --c-hover: #3d1f24;
+  --c-active: #4c262c;
+  --c-rail-item: #3d1f24;
+  --c-fg-strong: #fff3f4;
+  --c-fg: #f2e0e2;
+  --c-fg-2: #dfc0c4;
+  --c-fg-muted: #c69ca2;
+  --c-fg-faint: #a67e84;
+  --c-scroll: #522a30;
+}
+
+:root[data-theme='nordico'] {
+  --c-frame: #242933;
+  --c-side: #2e3440;
+  --c-chat: #3b4252;
+  --c-panel: #2a303b;
+  --c-well: #232831;
+  --c-float: #1c2028;
+  --c-line: #3b4252;
+  --c-line-strong: #4c566a;
+  --c-hover: #434c5e;
+  --c-active: #4c566a;
+  --c-rail-item: #3b4252;
+  --c-fg-strong: #eceff4;
+  --c-fg: #e5e9f0;
+  --c-fg-2: #c9d1de;
+  --c-fg-muted: #a3adbf;
+  --c-fg-faint: #8690a3;
+  --c-scroll: #4c566a;
+}
+
+/* Modo claro: cada tema tem sua versão clara (html[data-mode='light']) */
+:root[data-mode='light'] {
+  --c-warn: #b97c00; /* amarelo mais escuro para ler sobre fundo claro */
+}
+
+/* Resenha claro: papel no lugar do cobalto, e o cobalto vira a cor do texto.
+   .theme-resenha-paper usa o papel num trecho só (o cartão da tela de login) */
+:root[data-theme='resenha'][data-mode='light'],
+.theme-resenha-paper {
+  color-scheme: light;
+  --c-frame: #e8dcc8;
+  --c-side: #f3e8d7;
+  --c-chat: #fff8ee;
+  --c-panel: #efe3d0;
+  --c-well: #e8dcc8;
+  --c-float: #ffffff;
+  --c-line: #e0d2bc;
+  --c-line-strong: #cbb99e;
+  --c-hover: #ebdfcb;
+  --c-active: #e2d3bb;
+  --c-rail-item: #fff8ee;
+  --c-fg-strong: #141a30;
+  --c-fg: #1e2540;
+  --c-fg-2: #333b5a;
+  --c-fg-muted: #5a6280;
+  --c-fg-faint: #7a7c9c;
+  --c-scroll: #cbb99e;
+  --c-link: #1d6e57;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 70%, black);
+}
+
+.theme-resenha-paper {
+  --c-accent: #e89a1c;
+  --c-on-accent: #000000;
+  --c-warn: #b97c00;
+  color: var(--c-fg);
+}
+
+:root[data-theme='dark'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #e3e5e8;
+  --c-side: #f2f3f5;
+  --c-chat: #ffffff;
+  --c-panel: #ebedef;
+  --c-well: #e3e5e8;
+  --c-float: #ffffff;
+  --c-line: #e1e2e4;
+  --c-line-strong: #c4c9ce;
+  --c-hover: #e0e1e5;
+  --c-active: #d4d7dc;
+  --c-rail-item: #ffffff;
+  --c-fg-strong: #060607;
+  --c-fg: #313338;
+  --c-fg-2: #4e5058;
+  --c-fg-muted: #5c5e66;
+  --c-fg-faint: #80848e;
+  --c-scroll: #c4c9ce;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='ash'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #e2e2e4;
+  --c-side: #f1f1f1;
+  --c-chat: #fbfbfb;
+  --c-panel: #e9e9ea;
+  --c-well: #e4e4e5;
+  --c-float: #fefefe;
+  --c-line: #dbdbdc;
+  --c-line-strong: #c4c4c5;
+  --c-hover: #e1e1e2;
+  --c-active: #d5d5d7;
+  --c-rail-item: #f8f8f9;
+  --c-fg-strong: #171717;
+  --c-fg: #323234;
+  --c-fg-2: #4e4e50;
+  --c-fg-muted: #656567;
+  --c-fg-faint: #848485;
+  --c-scroll: #c4c4c5;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='oled'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #ffffff;
+  --c-side: #ffffff;
+  --c-chat: #ffffff;
+  --c-panel: #f6f6f7;
+  --c-well: #f0f0f2;
+  --c-float: #ffffff;
+  --c-line: #e4e4e7;
+  --c-line-strong: #d0d0d5;
+  --c-hover: #f0f0f2;
+  --c-active: #e6e6ea;
+  --c-rail-item: #f0f0f2;
+  --c-fg-strong: #09090b;
+  --c-fg: #27272a;
+  --c-fg-2: #3f3f46;
+  --c-fg-muted: #52525b;
+  --c-fg-faint: #71717a;
+  --c-scroll: #d0d0d5;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='nordico'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #e0e2e6;
+  --c-side: #eff0f3;
+  --c-chat: #fafbfc;
+  --c-panel: #e7e9ec;
+  --c-well: #e2e3e7;
+  --c-float: #fefefe;
+  --c-line: #d9dade;
+  --c-line-strong: #c1c3c8;
+  --c-hover: #dfe1e4;
+  --c-active: #d3d5da;
+  --c-rail-item: #f8f8f9;
+  --c-fg-strong: #151619;
+  --c-fg: #303236;
+  --c-fg-2: #4b4e53;
+  --c-fg-muted: #62656a;
+  --c-fg-faint: #818388;
+  --c-scroll: #c1c3c8;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='sakura'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #ebdbe2;
+  --c-side: #f6ecf0;
+  --c-chat: #fdf9fb;
+  --c-panel: #f0e3e8;
+  --c-well: #ecdde3;
+  --c-float: #fefdfe;
+  --c-line: #e2d4da;
+  --c-line-strong: #cfbac3;
+  --c-hover: #e9dae0;
+  --c-active: #e0ccd5;
+  --c-rail-item: #fbf7f8;
+  --c-fg-strong: #1c1216;
+  --c-fg: #3b2b32;
+  --c-fg-2: #59454d;
+  --c-fg-muted: #705c64;
+  --c-fg-faint: #8e7b83;
+  --c-scroll: #cfbac3;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='menta'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #dde9e8;
+  --c-side: #edf5f4;
+  --c-chat: #fafdfc;
+  --c-panel: #e4eeed;
+  --c-well: #dfeae8;
+  --c-float: #fdfefe;
+  --c-line: #d6e1df;
+  --c-line-strong: #bdccca;
+  --c-hover: #dce7e6;
+  --c-active: #cededc;
+  --c-rail-item: #f7fafa;
+  --c-fg-strong: #131a1a;
+  --c-fg: #2d3937;
+  --c-fg-2: #485755;
+  --c-fg-muted: #5e6e6c;
+  --c-fg-faint: #7e8c8a;
+  --c-scroll: #bdccca;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='floresta'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #dee8e2;
+  --c-side: #eef4f0;
+  --c-chat: #fafcfb;
+  --c-panel: #e5ede9;
+  --c-well: #e0e9e3;
+  --c-float: #fdfefe;
+  --c-line: #d7e0db;
+  --c-line-strong: #becbc3;
+  --c-hover: #dde6e1;
+  --c-active: #d0dcd5;
+  --c-rail-item: #f7faf8;
+  --c-fg-strong: #141a16;
+  --c-fg: #2e3832;
+  --c-fg-2: #49554e;
+  --c-fg-muted: #606c65;
+  --c-fg-faint: #7f8a84;
+  --c-scroll: #becbc3;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='oceano'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #dbe2eb;
+  --c-side: #ecf1f6;
+  --c-chat: #f9fbfd;
+  --c-panel: #e3e9f0;
+  --c-well: #dde4eb;
+  --c-float: #fdfefe;
+  --c-line: #d4dbe2;
+  --c-line-strong: #bac4ce;
+  --c-hover: #dbe1e9;
+  --c-active: #ccd6e0;
+  --c-rail-item: #f7f9fa;
+  --c-fg-strong: #13171b;
+  --c-fg: #2c333a;
+  --c-fg-2: #464e59;
+  --c-fg-muted: #5c6570;
+  --c-fg-faint: #7c848d;
+  --c-scroll: #bac4ce;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='uva'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #e2dcea;
+  --c-side: #f0edf5;
+  --c-chat: #fbfafd;
+  --c-panel: #e8e4ef;
+  --c-well: #e3deea;
+  --c-float: #fefdfe;
+  --c-line: #dad5e1;
+  --c-line-strong: #c3bccd;
+  --c-hover: #e1dce8;
+  --c-active: #d5cedf;
+  --c-rail-item: #f8f7fa;
+  --c-fg-strong: #16131b;
+  --c-fg: #322d39;
+  --c-fg-2: #4e4757;
+  --c-fg-muted: #655d6f;
+  --c-fg-faint: #837d8c;
+  --c-scroll: #c3bccd;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='cafe'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #e9e3dd;
+  --c-side: #f5f1ed;
+  --c-chat: #fdfbfa;
+  --c-panel: #eee9e4;
+  --c-well: #eae4df;
+  --c-float: #fefefd;
+  --c-line: #e1dbd6;
+  --c-line-strong: #ccc4bd;
+  --c-hover: #e7e1dc;
+  --c-active: #ded6ce;
+  --c-rail-item: #faf9f7;
+  --c-fg-strong: #1a1713;
+  --c-fg: #39332d;
+  --c-fg-2: #574f48;
+  --c-fg-muted: #6e655e;
+  --c-fg-faint: #8c847e;
+  --c-scroll: #ccc4bd;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='por-do-sol'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #edded9;
+  --c-side: #f7eeeb;
+  --c-chat: #fdfaf9;
+  --c-panel: #f1e6e2;
+  --c-well: #ede0dc;
+  --c-float: #fefefd;
+  --c-line: #e4d7d3;
+  --c-line-strong: #d0beb8;
+  --c-hover: #eaddd9;
+  --c-active: #e2d0ca;
+  --c-rail-item: #fbf8f6;
+  --c-fg-strong: #1c1412;
+  --c-fg: #3c2f2a;
+  --c-fg-2: #5b4944;
+  --c-fg-muted: #72605a;
+  --c-fg-faint: #8f7f7a;
+  --c-scroll: #d0beb8;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+:root[data-theme='rubi'][data-mode='light'] {
+  color-scheme: light;
+  --c-frame: #ebdbdc;
+  --c-side: #f6eced;
+  --c-chat: #fdf9fa;
+  --c-panel: #f0e3e4;
+  --c-well: #ebddde;
+  --c-float: #fefdfd;
+  --c-line: #e2d4d6;
+  --c-line-strong: #cebabc;
+  --c-hover: #e9dbdc;
+  --c-active: #e0ccce;
+  --c-rail-item: #faf7f7;
+  --c-fg-strong: #1b1313;
+  --c-fg: #3a2c2d;
+  --c-fg-2: #594647;
+  --c-fg-muted: #705c5e;
+  --c-fg-faint: #8d7c7d;
+  --c-scroll: #cebabc;
+  --c-accent-soft: color-mix(in oklab, var(--c-accent) 72%, black);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--c-frame);
+    color: var(--c-fg);
+    font-family: 'Bricolage Grotesque Variable', 'Segoe UI', 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-optical-sizing: auto;
+    user-select: none;
+    overflow: hidden;
+    /* Preso à área visível: no iPhone, 100vh é maior que a tela (conta as barras do navegador
+       recolhidas) e a página inteira ficava rolável, deixando o app "solto"; o iOS também
+       rolava a página ao abrir o teclado. */
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    width: 100%;
+    overscroll-behavior: none;
+  }
+
+  html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}
+
+/* Barra de rolagem fina, sem trilho, como no Discord */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--c-scroll);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-line-strong);
+  background-clip: padding-box;
+}
+
+/* Barra de título customizada: arrastar a janela, exceto nos botões */
+.app-drag {
+  -webkit-app-region: drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/*
+ * Anel de quem está falando: estático, como no Discord.
+ * Um anel pulsando (animação de box-shadow) obrigava o Chromium a repintar o avatar
+ * a cada quadro enquanto alguém falava (~80% de um núcleo entre GPU e interface).
+ */
+.speaking-ring {
+  outline: 3px solid #23a55a !important;
+  outline-offset: 1px;
+}
+
+/*
+ * Animações: curtas, de entrada e só com transform/opacity (compostas na GPU, sem repintar).
+ * Nada em loop nos indicadores de fala: animação contínua ali já custou 80% de um núcleo.
+ * "Reduzir animações" (Aparência) ou a preferência do Windows desligam tudo.
+ */
+@keyframes pc-fade { from { opacity: 0; } }
+@keyframes pc-pop { from { opacity: 0; transform: scale(0.96); } }
+@keyframes pc-rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes pc-drop { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes pc-slide-left { from { opacity: 0; transform: translateX(-8px); } }
+@keyframes pc-zoom { from { opacity: 0; transform: scale(0.85); } }
+
+:root {
+  --ease-out: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Fundo de modal: escurece em fade; o painel (primeiro filho) "salta" levemente */
+.anim-backdrop { animation: pc-fade 160ms ease-out both; }
+.anim-backdrop > :first-child { animation: pc-pop 200ms var(--ease-spring) both; }
+
+.anim-pop { animation: pc-pop 160ms var(--ease-spring) both; }
+.anim-fade { animation: pc-fade 180ms ease-out both; }
+.anim-rise { animation: pc-rise 180ms var(--ease-out) both; }
+.anim-drop { animation: pc-drop 150ms var(--ease-out) both; }
+.anim-slide-left { animation: pc-slide-left 180ms var(--ease-out) both; }
+.anim-zoom { animation: pc-zoom 220ms var(--ease-spring) both; }
+
+/*
+ * "Adesivo": contorno grosso e sombra dura, como o logo. Só em ações principais e janelas;
+ * listas e mensagens ficam sem contorno para não cansar a leitura.
+ */
+.sticker-btn {
+  border: 2.5px solid var(--c-ink);
+  box-shadow: 3px 3px 0 var(--c-ink);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out, background-color 150ms ease;
+}
+.sticker-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--c-ink);
+}
+.sticker-btn:disabled {
+  box-shadow: 1px 1px 0 var(--c-ink);
+}
+.sticker-btn:focus-visible {
+  outline: 3px solid var(--c-fg-strong);
+  outline-offset: 3px;
+}
+
+/* Tela de login: o logo laranja enorme atrás do cartão, cortado pela janela */
+.auth-logo {
+  position: fixed;
+  left: -9vw;
+  bottom: -30vh;
+  width: min(56vw, 860px);
+  transform: rotate(-14deg);
+  filter: drop-shadow(16px 20px 0 #05070d);
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  .auth-logo { display: none; }
+}
+
+/* O cartão "pousa" uma vez ao abrir: cai um pouco e se acomoda (o único movimento da tela) */
+@keyframes pc-land {
+  from { opacity: 0; transform: translateY(-14px) rotate(-1.5deg); }
+}
+.auth-card { animation: pc-land 420ms var(--ease-spring) both; }
+
+/* Cartões dentro do chat (convite, enquete): o adesivo em tamanho menor, para não pesar na conversa */
+.sheet-sm {
+  border: 2.5px solid var(--c-ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--c-ink);
+}
+
+/* Botão Início no trilho: o logo vira uma silhueta na cor do texto sobre o destaque (selecionado ou no hover) */
+.rail-home-mono path,
+.rail-home:hover path {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Janelas (modais): a mesma linguagem, com a sombra maior */
+.sheet {
+  border: 3px solid var(--c-ink);
+  border-radius: 18px;
+  box-shadow: 8px 8px 0 var(--c-ink);
+}
+
+/* Toque físico nos botões principais */
+.press { transition: transform 90ms ease-out, background-color 150ms ease, color 150ms ease; }
+.press:active { transform: scale(0.95); }
+
+/* Troca de tema: as cores deslizam por um instante (classe ligada só durante a troca) */
+.theme-switching,
+.theme-switching * {
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease !important;
+}
+
+/* "Desativar animações": tudo estático. Spinners de carregamento continuam girando (são o único sinal de progresso) */
+:root[data-reduce-motion] :not(.animate-spin),
+:root[data-reduce-motion] ::before,
+:root[data-reduce-motion] ::after {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :not(.animate-spin), ::before, ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* "Fulano está digitando": três pontos pulsando (só existe enquanto alguém digita) */
+@keyframes pc-typing {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+.typing-dots { display: inline-flex; gap: 3px; align-items: center; }
+.typing-dots > i {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: pc-typing 1.2s ease-in-out infinite;
+}
+.typing-dots > i:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots > i:nth-child(3) { animation-delay: 0.3s; }

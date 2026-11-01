@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <meta name="theme-color" content="#121729">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Resenha">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:url" content="{{URL}}">
+  {{OG_IMAGE}}
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/convite/assets/resenha-logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,800&display=swap">
+  <link rel="stylesheet" href="/convite/assets/invite.css">
+</head>
+<body data-state="{{STATE}}" data-code="{{CODE}}">
+  <header class="top">
+    <a class="brand" href="/download">
+      <img src="/convite/assets/resenha-logo.svg" alt="" width="40" height="38">
+      <span>Resenha</span>
+    </a>
+  </header>
+
+  <main class="stage">
+    <article class="card" aria-labelledby="server-name">
+      <div class="valid-only">
+        <div class="icon" data-icon>{{ICON}}</div>
+        <p class="lead" data-lead>{{LEAD}}</p>
+        <h1 id="server-name" class="server-name" data-name>{{SERVER_NAME}}</h1>
+        <p class="counts" data-counts><span class="dot" aria-hidden="true"></span><span data-counts-text>{{COUNTS}}</span></p>
+        <a class="sticker" href="resenha://convite/{{CODE}}" data-open-app>Abrir no Resenha</a>
+        <a class="sticker web-primary" href="/?convite={{CODE}}">Entrar pelo navegador</a>
+      </div>
+
+      <div class="invalid-only">
+        <h1 class="server-name invalid-title">Este convite expirou ou não existe</h1>
+        <p class="lead">Peça um link novo a quem te convidou.</p>
+        <a class="sticker" href="/download">Baixar o Resenha</a>
+      </div>
+    </article>
+
+    <p class="status" data-status aria-live="polite"></p>
+
+    <ul class="links valid-only">
+      <li class="link-web"><a href="/?convite={{CODE}}">Entrar pelo navegador</a></li>
+      <li><a href="/download">Baixar o Resenha</a></li>
+    </ul>
+  </main>
+
+  <script type="application/json" id="invite-data">{{DATA}}</script>
+  <script src="/convite/assets/invite.js" defer></script>
+</body>
+</html>

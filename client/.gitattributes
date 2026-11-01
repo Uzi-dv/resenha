@@ -1,0 +1,2 @@
+# Scripts de hook precisam de LF (sh não entende CRLF)
+.githooks/* text eol=lf

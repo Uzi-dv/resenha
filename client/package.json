@@ -1,0 +1,106 @@
+{
+  "name": "resenha-client",
+  "version": "1.0.0",
+  "description": "App desktop do Resenha: voz, chat e transmissão de tela entre amigos, com servidor próprio",
+  "author": "Resenha",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "electron": "electron .",
+    "start": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "dist": "vite build && electron-builder --win",
+    "dist:dir": "vite build && electron-builder --dir",
+    "dist:portable": "vite build && electron-builder --win portable",
+    "release": "node scripts/publish-release.cjs",
+    "test": "node --test"
+  },
+  "build": {
+    "appId": "app.resenha.desktop",
+    "protocols": [
+      {
+        "name": "Resenha",
+        "schemes": [
+          "resenha"
+        ]
+      }
+    ],
+    "productName": "Resenha",
+    "copyright": "Resenha",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/loopback-capture/**/*",
+      "**/node_modules/koffi/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Resenha",
+      "artifactName": "Resenha-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Resenha-Portable-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Uzi-dv",
+        "repo": "resenha"
+      }
+    ]
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "electron-updater": "^6.8.9",
+    "koffi": "^3.2.1",
+    "loopback-capture": "^2.0.0"
+  },
+  "devDependencies": {
+    "@sapphi-red/web-noise-suppressor": "^0.4.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^9.2.5",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "lucide-react": "^1.41.0",
+    "oxlint": "^1.79.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5",
+    "wait-on": "^9.5.1"
+  },
+  "license": "MIT"
+}

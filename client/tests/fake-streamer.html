@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Resenha · Transmissor de teste</title>
+  <style>body { background: #1e1f22; color: #dbdee1; font: 13px system-ui; padding: 16px; } canvas { width: 320px; border-radius: 8px; }</style>
+</head>
+<body>
+  <h3>Transmissor de teste</h3>
+  <p>Entra numa call como outro usuário e transmite um vídeo animado + áudio sintético pelo SFU.<br />
+    Uso: <code>?server=http://localhost:8001&amp;token=JWT&amp;channel=ID</code></p>
+  <canvas id="c" width="1280" height="720"></canvas>
+  <pre id="log"></pre>
+  <script type="module">
+    import { BrowserCallEngine } from '/src/services/voice/engine/BrowserCallEngine.js';
+    import { createRtcApi } from '/src/services/api.js';
+
+    const q = new URLSearchParams(location.search);
+    const SERVER = q.get('server') || 'http://localhost:8001';
+    const TOKEN = q.get('token');
+    const CHANNEL = Number(q.get('channel'));
+    localStorage.setItem('resenha_server_url', SERVER);
+    const log = (m) => (document.getElementById('log').textContent += m + '\n');
+
+    const canvas = document.getElementById('c');
+    const g = canvas.getContext('2d');
+    let frame = 0;
+    setInterval(() => {
+      g.fillStyle = `hsl(${(frame * 2) % 360} 60% 35%)`;
+      g.fillRect(0, 0, 1280, 720);
+      g.fillStyle = '#fff';
+      g.font = 'bold 72px sans-serif';
+      g.fillText(`Jogo do Amigo · ${frame++}`, 80, 380);
+    }, 1000 / 30);
+
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const dest = ctx.createMediaStreamDestination();
+    const voice = ctx.createGain();
+    osc.connect(voice).connect(dest);
+    osc.start();
+    // ?talk=burst: fala em rajadas (1–3 s falando, 1–4 s em silêncio), como numa conversa real
+    if (q.get('talk') === 'burst') {
+      const loop = (on) => {
+        voice.gain.value = on ? 1 : 0;
+        setTimeout(() => loop(!on), (on ? 1000 + Math.random() * 2000 : 1000 + Math.random() * 3000));
+      };
+      loop(true);
+    }
+
+    const engine = new BrowserCallEngine({ rtcApi: createRtcApi(TOKEN) });
+    engine.on('state', (s) => log(`mídia: ${s}`));
+    engine.on('error', (e) => log(`erro: ${e.message}`));
+    engine.publish([
+      { kind: 'mic', track: dest.stream.getAudioTracks()[0] },
+      { kind: 'screen', track: canvas.captureStream(30).getVideoTracks()[0], options: { encodings: [{ maxBitrate: 2_500_000, maxFramerate: 30 }] } }
+    ]);
+
+    const ws = new WebSocket(`${SERVER.replace(/^http/, 'ws')}/ws?token=${TOKEN}`);
+    ws.onmessage = (ev) => {
+      const { t, d } = JSON.parse(ev.data);
+      if (t === 'READY') ws.send(JSON.stringify({ op: 'voice_join', channel_id: CHANNEL }));
+      if (t === 'VOICE_JOINED' && !engine.active) {
+        log('entrou na call; iniciando mídia');
+        engine.start();
+      }
+    };
+    setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 'heartbeat', t: Date.now() })), 15000);
+    window.__streamer = { engine };
+  </script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+:root {
+  --cobalt: #161c33;
+  --cobalt-deep: #0b0e19;
+  --orange: #FFB547;
+  --orange-press: #F0A030;
+  --ink: #000000;
+  --paper: #FFF4E6;
+  --paper-muted: #D9D6E6;
+  --gutter: 16px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--cobalt) linear-gradient(to bottom, var(--cobalt) 0, var(--cobalt) 60vh, var(--cobalt-deep) 100%);
+  color: var(--paper);
+  font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--paper);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ---------- Topo ---------- */
+
+.top {
+  position: relative;
+  z-index: 2;
+  padding: 20px var(--gutter);
+}
+
+.wordmark {
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+/* ---------- Logo ---------- */
+
+.stage {
+  position: relative;
+  aspect-ratio: 10 / 8;
+  width: min(100%, 440px);
+  margin: 0 auto;
+}
+
+.stage-flat,
+.stage-3d {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stage-flat {
+  inset: auto;
+  left: 9%;
+  top: 10%;
+  width: 82%; /* mesmo tamanho do logo 3D */
+  height: auto;
+  transform: perspective(1400px) rotateY(-18deg) rotateX(6deg);
+  filter: drop-shadow(14px 18px 0 var(--cobalt-deep));
+}
+
+.stage-3d {
+  opacity: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  transition: opacity 0.5s ease;
+}
+
+.stage-3d:active {
+  cursor: grabbing;
+}
+
+.stage.is-3d .stage-3d {
+  opacity: 1;
+}
+
+.stage.is-3d .stage-flat {
+  visibility: hidden;
+}
+
+.layout {
+  overflow-x: clip; /* o logo inclinado/ampliado não cria rolagem horizontal */
+}
+
+/* ---------- Texto ---------- */
+
+.hero,
+.install {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--gutter);
+}
+
+h1 {
+  margin: 8px 0 12px;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 2rem + 3.2vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  max-width: 11ch;
+}
+
+.lede {
+  margin: 0 0 32px;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  font-weight: 500;
+  max-width: 32ch;
+  text-wrap: balance;
+}
+
+.mobile-note {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* Botão no estilo adesivo do logo: borda preta grossa e sombra dura que some ao pressionar */
+.sticker {
+  display: inline-block;
+  padding: 18px 30px;
+  border: 4px solid var(--ink);
+  border-radius: 16px;
+  background: var(--orange);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 6px 6px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.12s ease;
+}
+
+.sticker:hover {
+  background: var(--orange-press);
+}
+
+.sticker:active {
+  transform: translate(6px, 6px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.sticker:focus-visible {
+  outline: 4px solid var(--paper);
+  outline-offset: 6px;
+  border-radius: 16px;
+}
+
+.meta {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 500;
+}
+
+.links a {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.links a:hover {
+  text-decoration-color: var(--orange);
+}
+
+/* ---------- Como instalar ---------- */
+
+.install {
+  margin-top: 64px;
+  padding-bottom: 80px;
+  max-width: 36rem;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-weight: 800;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.steps {
+  margin: 0 0 40px;
+  padding: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+.steps li {
+  position: relative;
+  padding-left: 52px;
+  margin-bottom: 18px;
+  counter-increment: passo;
+}
+
+.steps li::before {
+  content: counter(passo);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.steps strong {
+  font-weight: 800;
+}
+
+code {
+  font-family: inherit;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--cobalt-deep);
+}
+
+.install p {
+  margin: 0;
+}
+
+.req-title {
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+}
+
+/* ---------- Desktop: logo à esquerda, maior que a coluna, passando da dobra ---------- */
+
+@media (min-width: 960px) {
+  .top {
+    padding: 28px 40px;
+  }
+
+  /* Largura limitada: em telas largas o conteúdo fica junto, no centro, em vez de espalhado nas bordas */
+  .layout {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    grid-template-rows: auto auto;
+    column-gap: 24px;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+
+  /* O logo cabe inteiro na primeira tela: a largura segue a coluna, mas nunca deixa a altura
+     (largura x 0,8) passar da janela menos o topo */
+  .stage {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+    width: min(112%, calc((100vh - 150px) * 1.25));
+    max-width: none;
+    margin: 0;
+  }
+
+  .hero {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 4vh;
+  }
+
+  .install {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 8px;
+    padding: 0 0 120px;
+    max-width: 34rem;
+  }
+}
+
+/* ---------- Celular: o app é para Windows; o navegador vira a opção em destaque ---------- */
+
+@media (max-width: 719px) {
+  .stage {
+    width: min(100%, 380px);
+    margin-top: 4px;
+  }
+
+  .mobile-note {
+    display: block;
+    margin: -12px 0 24px;
+    color: var(--paper-muted);
+    max-width: 36ch;
+  }
+
+  .actions {
+    align-items: stretch;
+  }
+
+  .sticker {
+    text-align: center;
+  }
+
+  .links {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .link-web a {
+    display: block;
+    padding: 14px 24px;
+    border: 3px solid var(--paper);
+    border-radius: 16px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.125rem;
+  }
+
+  .link-web a:active {
+    background: var(--cobalt-deep);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker,
+  .stage-3d {
+    transition: none;
+  }
+}
