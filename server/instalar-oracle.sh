@@ -66,7 +66,7 @@ apt-get install -y -qq git python3 python3-venv python3-pip curl cron caddy ipta
 say "Liberando as portas 80 e 443"
 for p in 80 443; do
   iptables -C INPUT -p tcp --dport $p -m state --state NEW -j ACCEPT 2>/dev/null || \
-    iptables -I INPUT 5 -p tcp --dport $p -m state --state NEW -j ACCEPT
+    iptables -I INPUT 1 -p tcp --dport $p -m state --state NEW -j ACCEPT
 done
 netfilter-persistent save >/dev/null 2>&1 || true
 
