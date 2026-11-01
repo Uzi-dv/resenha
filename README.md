@@ -23,7 +23,7 @@ Voz, chat e transmissão de tela para a galera, com **servidor próprio**. Feito
  │ contas, mensagens, canais,   │ ────────────────► │ cada um e entrega para os outros │
  │ convites, versão web         │                   └───────────────▲──────────────────┘
  └───────────▲──────────────────┘                                   │ voz e vídeo
-             │ HTTPS (https://SEU-NOME.duckdns.org)                 │
+             │ HTTPS (https://resenha-galera.duckdns.org)                 │
              └──────────────── app Resenha dos amigos ──────────────┘
 ```
 
@@ -35,7 +35,7 @@ O servidor é leve (~80 MB de memória, quase nada de processador): a voz e o v�
 Este repositório (`Uzi-dv/resenha`) é **público**: as versões do app saem nele mesmo e o app instalado se atualiza
 por aqui. Segredos nunca entram no código: ficam só no servidor (`server/.env`).
 
-Em **Settings → Secrets and variables → Actions → Variables**, crie `SERVER_URL` = `https://SEU-NOME.duckdns.org`.
+Em **Settings → Secrets and variables → Actions → Variables**, crie `SERVER_URL` = `https://resenha-galera.duckdns.org`.
 Depois, **Actions → Release → Run workflow**. Em ~10 min sai a versão `v1.0.0` com o `Resenha-Setup-1.0.0.exe`.
 Cada push que mexe em `client/` publica uma versão nova sozinho.
 
@@ -62,8 +62,8 @@ atualização do endereço e backup diário (os 14 últimos, em `/opt/resenha/se
 Para atualizar o servidor depois: `sudo bash instalar.sh` de novo (não apaga nada).
 
 ### 5. Chamar a galera
-Mande `https://SEU-NOME.duckdns.org/download`. Cada um baixa, cria a conta e entra pelo link de convite.
-Também funciona direto no navegador: `https://SEU-NOME.duckdns.org`.
+Mande `https://resenha-galera.duckdns.org/download`. Cada um baixa, cria a conta e entra pelo link de convite.
+Também funciona direto no navegador: `https://resenha-galera.duckdns.org`.
 O Windows pode avisar "O Windows protegeu o computador" (app sem assinatura paga): **Mais informações → Executar assim mesmo**.
 
 ## Administração
@@ -75,7 +75,7 @@ cd /opt/resenha/server && sudo -u resenha ./venv/bin/python scripts/superadmin.p
 
 | Tarefa | Comando no servidor |
 | :--- | :--- |
-| Ver se está no ar | `sudo systemctl status resenha` ou abrir `https://SEU-NOME.duckdns.org/api/status` |
+| Ver se está no ar | `sudo systemctl status resenha` ou abrir `https://resenha-galera.duckdns.org/api/status` |
 | Reiniciar | `sudo systemctl restart resenha` |
 | Ver o log | `sudo journalctl -u resenha -n 50` |
 

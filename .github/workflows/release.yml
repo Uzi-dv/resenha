@@ -2,8 +2,8 @@
 # Windows e publica no seu repositório público de releases (de onde o app se atualiza sozinho).
 #
 # Resenha: por padrão as versões saem no PRÓPRIO repositório (público), com o token automático do GitHub.
-# Nada a configurar além da variável SERVER_URL (Settings → Secrets and variables → Actions → Variables),
-# com o endereço do servidor, ex.: https://resenha-galera.duckdns.org
+# Endereço do servidor: https://resenha-galera.duckdns.org (troque com a variável SERVER_URL (Settings → Secrets and variables → Actions → Variables),
+# em Settings → Secrets and variables → Actions → Variables).
 # Opcional: RELEASES_REPO + segredo RELEASES_TOKEN para publicar num repositório separado.
 #
 # Versão: a do package.json se for maior que a última publicada; senão, +1 no patch.
@@ -32,7 +32,7 @@ jobs:
         working-directory: client
     env:
       GH_REPO: ${{ vars.RELEASES_REPO || github.repository }}
-      VITE_SERVER_URL: ${{ vars.SERVER_URL }}
+      VITE_SERVER_URL: ${{ vars.SERVER_URL || 'https://resenha-galera.duckdns.org' }}
     steps:
       - uses: actions/checkout@v4
         with:
