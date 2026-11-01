@@ -56,6 +56,13 @@ chmod 700 /usr/local/bin/resenha-duckdns
 grep -q OK /var/log/resenha-duckdns.log || { echo "O DuckDNS recusou: confira o nome e o token."; exit 1; }
 echo "*/5 * * * * root /usr/local/bin/resenha-duckdns" > /etc/cron.d/resenha-duckdns
 
+# ------------------------------------------------------------------ memória extra (máquina de 1 GB)
+if [ ! -f /swapfile ] && [ "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -lt 2000000 ]; then
+  say "Criando 2 GB de memória extra (swap)"
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+  grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
 # ------------------------------------------------------------------ pacotes
 say "Instalando pacotes"
 export DEBIAN_FRONTEND=noninteractive
