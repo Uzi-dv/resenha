@@ -12,7 +12,7 @@ KEY="$HOME/.ssh/resenha"
 say() { printf '\n\033[1;33m==> %s\033[0m\n' "$*"; }
 q() { "$@" 2>/dev/null || true; }
 
-[ -f "$KEY" ] || { say "Criando a chave SSH"; mkdir -p ~/.ssh; ssh-keygen -q -t ed25519 -N "" -f "$KEY" -C resenha; }
+[ -f "$KEY" ] || { say "Criando a chave SSH"; mkdir -p ~/.ssh; ssh-keygen -q -t rsa -b 4096 -N "" -f "$KEY" -C resenha; }
 
 say "Rede"
 VCN=$(q oci network vcn list -c "$C" --display-name resenha-vcn --query 'data[0].id' --raw-output)
