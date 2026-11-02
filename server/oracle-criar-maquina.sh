@@ -69,7 +69,7 @@ echo "$IP" > ~/resenha-ip.txt
 
 say "Esperando a máquina aceitar conexão"
 for i in $(seq 1 60); do
-  ssh -i "$KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 -o BatchMode=yes ubuntu@"$IP" true 2>/dev/null && break
+  ssh -n -i "$KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 -o BatchMode=yes ubuntu@"$IP" true 2>/dev/null && break
   sleep 5
 done
 
