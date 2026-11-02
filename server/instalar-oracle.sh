@@ -81,7 +81,7 @@ netfilter-persistent save >/dev/null 2>&1 || true
 say "Baixando o Resenha"
 id "$USUARIO" >/dev/null 2>&1 || useradd --system --home "$PASTA" --shell /usr/sbin/nologin "$USUARIO"
 if [ -d "$PASTA/.git" ]; then
-  git -C "$PASTA" pull --ff-only
+  git -c safe.directory="$PASTA" -C "$PASTA" pull --ff-only
 else
   git clone --depth 1 "$REPO_URL" "$PASTA"
 fi
