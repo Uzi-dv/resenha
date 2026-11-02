@@ -20,6 +20,8 @@ import time
 from typing import Dict, Optional
 
 import httpx
+
+from app.uso import uso
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
@@ -160,6 +162,10 @@ async def create_session(user: User = Depends(get_current_user)):
 @router.post("/publish")
 async def publish(req: PublishRequest, user: User = Depends(get_current_user)):
     _require_enabled()
+    # Franquia grátis do Cloudflare quase no fim: só voz até o mês virar (ver app/uso.py)
+    if uso.video_bloqueado() and any(t.kind in ("screen", "screen_audio", "camera") for t in req.tracks):
+        raise HTTPException(status_code=429, detail="Tela e câmera estão pausadas até o mês virar: a franquia grátis "
+                            "de vídeo do servidor está quase no fim. A voz continua funcionando.")
     st = _require_session(user)
     session_id = st.session_id
     names = {t.mid: f"u{user.id}-{t.kind}-{secrets.token_hex(4)}" for t in req.tracks}

@@ -17,7 +17,7 @@ from app.permissions import ensure_default_roles
 from app.gateway import Connection, hub
 from app.realtime import cf
 from app.routers import admin_routes, auth_routes, dm_routes, invite_routes, message_routes, server_routes, upload_routes
-from app import downloads, invite_page, realtime, web_app
+from app import downloads, invite_page, realtime, uso, web_app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("resenha.main")
@@ -66,6 +66,7 @@ async def lifespan(_: FastAPI):
         await ensure_default_roles(db)
     await hub.load()
     web_task = asyncio.create_task(web_app.updater_loop())
+    uso_task = asyncio.create_task(uso.uso.laco())
     if not cf.enabled:
         logger.warning(
             "Cloudflare Realtime NÃO configurado: chat funciona, mas voz/tela ficam indisponíveis. "
@@ -73,6 +74,8 @@ async def lifespan(_: FastAPI):
         )
     yield
     web_task.cancel()
+    uso_task.cancel()
+    uso.uso.salvar()
     await hub.shutdown()
     await cf.close()
     await engine.dispose()
@@ -101,6 +104,7 @@ app.include_router(dm_routes.router)
 app.include_router(admin_routes.router)
 app.include_router(invite_routes.router)
 app.include_router(realtime.router)
+app.include_router(uso.router)
 
 
 @app.get("/api/status")
@@ -190,6 +194,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(None)):
 # não encobrir /api, /ws, /uploads e /download (registrados antes).
 @app.get("/{path:path}", include_in_schema=False)
 async def web_files(path: str):
-    if path.startswith(("api/", "uploads/", "ws", "download/", "convite/")):
+    if path.startswith(("api/", "uploads/", "ws", "download/", "convite/", "painel")):
         raise HTTPException(status_code=404, detail="Não encontrado.")
     return web_app.serve_file(path)

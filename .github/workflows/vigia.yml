@@ -1,0 +1,53 @@
+# Vigia do servidor: a cada 30 min confere se o Resenha está no ar. Se cair, abre uma "issue" aqui no GitHub
+# (o GitHub manda e-mail para você); quando voltar, fecha sozinho com um comentário.
+name: Vigia do servidor
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: vigia
+  cancel-in-progress: false
+
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    env:
+      URL: ${{ vars.SERVER_URL || 'https://resenha-galera.duckdns.org' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TITULO: 'Servidor do Resenha fora do ar'
+    steps:
+      - name: Conferir
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            r="$(curl -fsS -m 20 "$URL/api/status" || true)"
+            if echo "$r" | grep -q '"app":"Resenha API"' && echo "$r" | grep -q '"voice":true'; then ok=1; break; fi
+            sleep 30
+          done
+          aberta="$(gh issue list --state open --search "in:title \"$TITULO\"" --json number --jq '.[0].number // empty')"
+          agora="$(TZ=America/Sao_Paulo date '+%d/%m %H:%M')"
+          if [ $ok = 1 ]; then
+            echo "no ar: $r"
+            [ -n "$aberta" ] && gh issue close "$aberta" --comment "Voltou ao ar em $agora (horário de Brasília)."
+          else
+            echo "FORA DO AR. Resposta: ${r:-nenhuma}"
+            if [ -z "$aberta" ]; then
+              gh issue create --title "$TITULO" --body "Desde $agora (horário de Brasília) o endereço $URL/api/status não responde ou está sem voz.
+
+          O que conferir:
+          1. Oracle: a máquina **resenha** está *Running*? (cloud.oracle.com → Compute → Instances)
+          2. No Cloud Shell: \`ssh -i ~/.ssh/resenha ubuntu@IP 'sudo systemctl status resenha caddy'\`
+          3. DuckDNS: o IP do resenha-galera é o da máquina?
+
+          Esta issue fecha sozinha quando o servidor voltar."
+            fi
+            exit 1
+          fi
